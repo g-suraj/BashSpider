@@ -1,24 +1,37 @@
 #!/bin/bash
 
-desired_links () {
-  Assets1="$(echo "$links" | grep '^/' | grep "\.")"
-  Assets2="$(echo "$links" | grep '^./' |  cut -c 2- | grep "\.")"
-  Assets="$(echo "$Assets1$Assets2" | sort)"
-  relative_links_one="$(echo "$links" | grep "^./" | cut -c 2-)"
-  relative_links_two="$(echo "$links" | grep "^/" )"
-  relative_links="$(echo "$relative_links_one$relative_links_two" | sort | grep -v "\.")"
-  regular_links="$(echo "$links" | grep "^http")"
+declare -a url=($1)
+#printf '%s\n' "${url[@]}"
+
+parsePage () {
+
+  for i in "${url[@]}"
+  do
+    : 
+    output="$(wget -qO- ${i})"
+    links="$(echo "$output" | grep -Po '(?<=href=")[^"]*')"
+    desiredLinks
+    #echo "$links"
+  done
+
 }
 
-parse_page () {
+desiredLinks () {
+  Assets1="$(echo "$links" | grep '^/' | grep "\.")"
+  Assets2="$(echo "$links" | grep '^./' |  cut -c 2- | grep "\.")"
+  Assets3="$(echo "$links" | grep "^$url" | cut -c $((${#url} + 1))- | grep "\." | grep -v "\.com")"
+  Assets="$(echo "$Assets1$Assets2$Assets3" | sort | awk '{print "'"$i"'" $0}')"
+  relativeLinks1="$(echo "$links" | grep "^./" | cut -c 2-)"
+  relativeLinks2="$(echo "$links" | grep "^/" )"
+  regularLinks="$(echo "$links" | grep "^$url" | cut -c $((${#url} + 1))- | grep -v "\." )"
+  Rlinks="$(echo "$relativeLinks1$relativeLinks2$regularLinks" | sort | grep -v "\." | awk '{print "'"$i"'" $0}')"
+}
 
-  url=($1)
-  output="$(wget -qO- ${url})"
-  links="$(echo "$output" | grep -Po '(?<=href=")[^"]*')"
-  echo "links"
-  #echo "$links"
-
+removeDuplicates () {
+  url="$(echo ${url[@]} | tr [:space:] '\n' | awk '!a[$0]++')"
 }
 
 #echo $links
-desired_links
+printf "["
+parsePage
+echo "]"
