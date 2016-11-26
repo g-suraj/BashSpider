@@ -21,6 +21,17 @@ desiredLinks () {
   Assets2="$(echo "$links" | grep '^./' |  cut -c 2- | grep "\.")"
   Assets3="$(echo "$links" | grep "^$url" | cut -c $((${#url} + 1))- | grep "\." | grep -v "\.com")"
   Assets="$(echo "$Assets1$Assets2$Assets3" | sort | awk '{print "'"$i"'" $0}')"
+  printf '\t%s\n' "{"
+  printf '\t\t%s%s%s\n' "\"url\": \"" "$i" "\","
+  printf '\t\t%s\n' "\"assets\": ["
+  IFS=$'\n'
+  for j in ""$Assets""
+  do
+    : 
+    printf '\t\t\t%s\n' "$j"
+  done
+  printf '\t\t%s\n' "]"
+  printf '\t%s\n' "}"
   relativeLinks1="$(echo "$links" | grep "^./" | cut -c 2-)"
   relativeLinks2="$(echo "$links" | grep "^/" )"
   regularLinks="$(echo "$links" | grep "^$url" | cut -c $((${#url} + 1))- | grep -v "\." )"
@@ -32,6 +43,6 @@ removeDuplicates () {
 }
 
 #echo $links
-printf "["
+printf '%s\n' "["
 parsePage
-echo "]"
+printf '%s\n' "]"
