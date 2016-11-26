@@ -1,0 +1,16 @@
+#!/bin/bash
+print_error () {
+  echo Invalid website, no data was found. Please try again
+}
+url=$1
+##echo $url
+##html=${echo "`wget -qO- ${1}`"}
+#html=`wget -qO- ${1}`
+#echo $html
+filename="index.html"
+output=`wget -qO- ${url}`
+#links=$(echo "$(index.html)" | grep -Po '(?<=href=")[^"]*')
+links="$(echo $output | grep -Po '(?<=href=")[^"]*')"
+#links=$(echo $output)
+#rm index.html
+echo $links
