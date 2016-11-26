@@ -1,16 +1,24 @@
 #!/bin/bash
-print_error () {
-  echo Invalid website, no data was found. Please try again
+
+desired_links () {
+  Assets1="$(echo "$links" | grep '^/' | grep "\.")"
+  Assets2="$(echo "$links" | grep '^./' |  cut -c 2- | grep "\.")"
+  Assets="$(echo "$Assets1$Assets2" | sort)"
+  relative_links_one="$(echo "$links" | grep "^./" | cut -c 2-)"
+  relative_links_two="$(echo "$links" | grep "^/" )"
+  relative_links="$(echo "$relative_links_one$relative_links_two" | sort | grep -v "\.")"
+  regular_links="$(echo "$links" | grep "^http")"
 }
-url=$1
-##echo $url
-##html=${echo "`wget -qO- ${1}`"}
-#html=`wget -qO- ${1}`
-#echo $html
-filename="index.html"
-output=`wget -qO- ${url}`
-#links=$(echo "$(index.html)" | grep -Po '(?<=href=")[^"]*')
-links="$(echo $output | grep -Po '(?<=href=")[^"]*')"
-#links=$(echo $output)
-#rm index.html
-echo $links
+
+parse_page () {
+
+  url=($1)
+  output="$(wget -qO- ${url})"
+  links="$(echo "$output" | grep -Po '(?<=href=")[^"]*')"
+  echo "links"
+  #echo "$links"
+
+}
+
+#echo $links
+desired_links
