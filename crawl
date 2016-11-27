@@ -1,15 +1,14 @@
 #!/bin/bash
 domain="$(echo $1)"
+seen=0
 start="$domain"
 if [[ ${1: -1} == "/" ]]; then
   start="$(echo "${1::-1}")"
   domain="echo $start"
 fi
 declare -a url=($start)
-seen=0
 
 parsePage () {
-
   for l in "${!url[@]}"
   do
     : 
@@ -26,19 +25,33 @@ parsePage () {
     ((seen+=1))
     desiredLinks
   done
-
 }
 
-desiredLinks () {
-  folder=""
+addUrls () {
+  for k in ""$Rlinks""
+  do
+    :
+    if [[ ${k: -1} == "/" ]]; then
+      k="$(echo "${k::-1}")"
+    fi
+    if [[ ! " ${url[@]} " =~ " ${k} " ]]; then
+      url+=($k)
+    fi
+  done
+}
+
+getAssets () {
+  # Get different type of Assets
   Assets1="$(echo "$links" | grep '^/' | grep "\."| grep -v "/$")"
   Assets2="$(echo "$links" | grep '^./' |  cut -c 2- | grep -v "/$")"
   Assets3="$(echo "$links" | grep "^$i" | cut -c $((${#i} + 1))- | grep "\." | grep -v ".com" | grep -v "/$")"
   Assets4="$scripts"
-  echo "$Assets3"
   if [[ ! -z $(echo "$Assets1$Assets2$Assets3$Assets4")  ]]; then
     Assets="$(echo "$Assets1$Assets2$Assets3$Assets4" | sort | awk '{print "'"$i"'" $0}')"
   fi
+}
+
+printAssets () {
   printf '\t%s\n' "{"
   printf '\t\t%s%s%s\n' "\"url\": \"" "$i" "\","
   printf '\t\t%s\n' "\"assets\": ["
@@ -50,27 +63,28 @@ desiredLinks () {
   done
   printf '\t\t%s\n' "]"
   printf '\t%s\n' "}"
+}
+
+getLinks () {
   relativeLinks1="$(echo "$links" | grep "^./" | cut -c 2-| grep -v "\." | awk '{print "'"$i"'" $0}')"
   relativeLinks2="$(echo "$links" | grep "^/" | grep -v "\." | awk '{print "'"$domain"'" $0}')"
   regularLinks="$(echo "$links" | grep "^$i" | cut -c $((${#i} + 1))- | grep -v "\." | awk '{print "'"$i"'" $0}')"
   Rlinks="$(echo "$relativeLinks1$relativeLinks2$regularLinks" | sort )"
   Rlinks="$(printf "%s\n" "$Rlinks" | uniq -u)"
-  for k in ""$Rlinks""
-  do
-    :
-    if [[ ${k: -1} == "/" ]]; then
-      k="$(echo "${k::-1}")"
-    fi
-    if [[ ! " ${url[@]} " =~ " ${k} " ]]; then
-      url+=($k)
-    fi
-  done
-  removeDuplicates
-  parsePage
 }
 
 removeDuplicates () {
   url=($(echo ${url[@]} | tr [:space:] '\n' | awk '!a[$0]++'))
+}
+
+desiredLinks () {
+  getAssets
+  # Print out all assets of current page
+  printAssets
+  getLinks
+  addUrls
+  removeDuplicates
+  parsePage
 }
 
 printf '%s\n' "["
