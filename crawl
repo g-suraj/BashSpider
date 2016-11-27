@@ -1,8 +1,9 @@
 #!/bin/bash
-
+domain="$(echo $1)"
 start="$(echo $1)"
 if [[ ${1: -1} == "/" ]]; then
   start="$(echo "${1::-1}")"
+  domain="echo $start"
 fi
 declare -a url=($start)
 seen=0
@@ -24,16 +25,19 @@ parsePage () {
     links="$(echo "$output" | grep -Po '(?<=href=")[^"]*')"
     ((seen+=1))
     desiredLinks
-    #echo "$links"
   done
 
 }
 
 desiredLinks () {
+  folder=""
   Assets1="$(echo "$links" | grep '^/' | grep "\.")"
   Assets2="$(echo "$links" | grep '^./' |  cut -c 2- | grep "\.")"
   Assets3="$(echo "$links" | grep "^$i" | cut -c $((${#i} + 1))- | grep "\." | grep -v "\.com")"
-  Assets="$(echo "$Assets1$Assets2$Assets3" | sort | awk '{print "'"$i"'" $0}')"
+  echo "$Assets3"
+  if [[ ! -z $(echo "$Assets1$Assets2$Assets3")  ]]; then
+    Assets="$(echo "$Assets1$Assets2$Assets3" | sort | awk '{print "'"$i"'" $0}')"
+  fi
   printf '\t%s\n' "{"
   printf '\t\t%s%s%s\n' "\"url\": \"" "$i" "\","
   printf '\t\t%s\n' "\"assets\": ["
@@ -45,10 +49,10 @@ desiredLinks () {
   done
   printf '\t\t%s\n' "]"
   printf '\t%s\n' "}"
-  relativeLinks1="$(echo "$links" | grep "^./" | cut -c 2-)"
-  relativeLinks2="$(echo "$links" | grep "^/" )"
-  regularLinks="$(echo "$links" | grep "^$i" | cut -c $((${#i} + 1))- | grep -v "\." )"
-  Rlinks="$(echo "$relativeLinks1$relativeLinks2$regularLinks" | sort | grep -v "\." | awk '{print "'"$i"'" $0}')"
+  relativeLinks1="$(echo "$links" | grep "^./" | cut -c 2-| grep -v "\." | awk '{print "'"$i"'" $0}')"
+  relativeLinks2="$(echo "$links" | grep "^/" | grep -v "\." | awk '{print "'"$domain"'" $0}')"
+  regularLinks="$(echo "$links" | grep "^$i" | cut -c $((${#i} + 1))- | grep -v "\." | awk '{print "'"$i"'" $0}')"
+  Rlinks="$(echo "$relativeLinks1$relativeLinks2$regularLinks" | sort )"
   Rlinks="$(printf "%s\n" "$Rlinks" | uniq -u)"
   for k in ""$Rlinks""
   do
@@ -68,7 +72,6 @@ removeDuplicates () {
   url=($(echo ${url[@]} | tr [:space:] '\n' | awk '!a[$0]++'))
 }
 
-#echo $links
 printf '%s\n' "["
 parsePage
 printf '%s\n' "]"
