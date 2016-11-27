@@ -45,9 +45,11 @@ getAssets () {
   Assets1="$(echo "$links" | grep '^/' | grep "\."| grep -v "/$")"
   Assets2="$(echo "$links" | grep '^./' |  cut -c 2- | grep -v "/$")"
   Assets3="$(echo "$links" | grep "^$i" | cut -c $((${#i} + 1))- | grep "\." | grep -v ".com" | grep -v "/$")"
-  Assets4="$scripts"
+  Scripts1="$(echo "scripts" | grep "^https://")"
+  Scripts2="$(echo "scripts" | grep -v "^https://")"
   if [[ ! -z $(echo "$Assets1$Assets2$Assets3$Assets4")  ]]; then
-    Assets="$(echo "$Assets1$Assets2$Assets3$Assets4" | sort | awk '{print "'"$i"'" $0}')"
+    Assets="$(echo "$Assets1$Assets2$Assets3$Scripts2" | awk '{print "'"$i"'" $0}')"
+    Assets="$(echo "$Assets$Scripts1" | sort )"
   fi
 }
 
