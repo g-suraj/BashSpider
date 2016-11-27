@@ -41,13 +41,12 @@ addUrls () {
 }
 
 getAssets () {
-  # Get different type of Assets
   Assets1="$(echo "$links" | grep '^/' | grep "\."| grep -v "/$")"
   Assets2="$(echo "$links" | grep '^./' |  cut -c 2- | grep -v "/$")"
   Assets3="$(echo "$links" | grep "^$i" | cut -c $((${#i} + 1))- | grep "\." | grep -v ".com" | grep -v "/$")"
-  Scripts1="$(echo "scripts" | grep "^https://")"
-  Scripts2="$(echo "scripts" | grep -v "^https://")"
-  if [[ ! -z $(echo "$Assets1$Assets2$Assets3$Assets4")  ]]; then
+  Scripts1="$(echo "$scripts" | grep "^https://")"
+  Scripts2="$(echo "$scripts" | grep -v "^https://")"
+  if [[ ! -z $(echo "$Assets1$Assets2$Assets3$Scripts2")  ]]; then
     Assets="$(echo "$Assets1$Assets2$Assets3$Scripts2" | awk '{print "'"$i"'" $0}')"
     Assets="$(echo "$Assets$Scripts1" | sort )"
   fi
@@ -59,8 +58,7 @@ printAssets () {
   printf '\t\t%s\n' "\"assets\": ["
   IFS=$'\n'
   for j in ""$Assets""
-  do
-    : 
+  do : 
     printf '\t\t\t%s\n' "$j"
   done
   printf '\t\t%s\n' "]"
@@ -71,8 +69,7 @@ getLinks () {
   relativeLinks1="$(echo "$links" | grep "^./" | cut -c 2-| grep -v "\." | awk '{print "'"$i"'" $0}')"
   relativeLinks2="$(echo "$links" | grep "^/" | grep -v "\." | awk '{print "'"$domain"'" $0}')"
   regularLinks="$(echo "$links" | grep "^$i" | cut -c $((${#i} + 1))- | grep -v "\." | awk '{print "'"$i"'" $0}')"
-  Rlinks="$(echo "$relativeLinks1$relativeLinks2$regularLinks" | sort )"
-  Rlinks="$(printf "%s\n" "$Rlinks" | uniq -u)"
+  Rlinks="$(echo "$relativeLinks1$relativeLinks2$regularLinks" | sort | uniq -u)"
 }
 
 removeDuplicates () {
@@ -80,12 +77,17 @@ removeDuplicates () {
 }
 
 desiredLinks () {
+  # Get all the assets on the page
   getAssets
   # Print out all assets of current page
   printAssets
+  # Get all reachable links. 
   getLinks
+  # Add reachable links to list to iterate through
   addUrls
+  # Remove duplicate urls
   removeDuplicates
+  # Recurisve call
   parsePage
 }
 
