@@ -1,8 +1,7 @@
-#Gocardless Web Crawler
+#Web Crawler
 
 **Requirements**
 
-* Linux/OSX
 * Bash
 
 **Usage**
